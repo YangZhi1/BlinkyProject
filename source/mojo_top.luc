@@ -18,10 +18,10 @@ module mojo_top (
     input sigA,
     input sigB,
     input sigCin,
-    input sigSum,
-    input sigCout,
     input io_dip [3][8],     // DIP switches on IO Shield
-    output elvis_led[4] // Lights up according to FPGA output
+    output pin_outOne, // Lights up according to FPGA output
+    output pin_outTwo,
+    output pin_outThree
   ) {
  
   sig rst;                  // reset signal
@@ -30,7 +30,7 @@ module mojo_top (
     // The reset conditioner is used to synchronize the reset signal to the FPGA
     // clock. This ensures the entire FPGA comes out of reset at the same time.
     reset_conditioner reset_cond;
-    blinker myBlinker(.rst(rst)); // Creates a new blinker circuit
+    dff outputSig[3];
   }
  
   sig abc[10];
@@ -39,7 +39,11 @@ module mojo_top (
     reset_cond.in = ~rst_n; // input raw inverted reset signal
     rst = reset_cond.out;   // conditioned reset
    
-    io_led[0][7:0] = 8h00;
+    pin_outOne = outputSig.q;
+    pin_outTwo = outputSig.q;
+    pin_outThree = outputSig.q;
+    
+    io_led[0][7:0] = 8h00; // turn off all LEDs
     io_led[1][7:0] = 8h00;
     io_led[2][7:0] = 8h00;
     led = 8h00;             // turn LEDs off
@@ -53,19 +57,15 @@ module mojo_top (
     io_led[0][0] = sigA;
     io_led[0][1] = sigB;
     io_led[0][2] = sigCin;
-    io_led[0][3] = sigSum;
-    io_led[0][4] = sigCout;
    
+    
+    // the following 4 (or 5) lines will output correct LED light on LED5 and LED6
     io_led[0][5] = (sigA & sigB) | (sigB & sigCin) | (sigA & sigCin);
-   
     abc[0] = sigA + sigB + sigCin;
-   
     // this if statement determines whether Cout led lights up or not
     if(abc[0]==1 | abc[0] == 3) {
       io_led[0][6] = sigA | sigB | sigCin;
-    }
-   
-    elvis_led = myBlinker.blink; // links the led on elvis ("correct ones") to FPGA
+    }   
    
   }
 }
