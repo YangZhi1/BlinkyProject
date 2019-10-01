@@ -15,9 +15,6 @@ module mojo_top (
     output io_seg [8],      // 7-segment LEDs on IO Shield
     output io_sel [4],      // Digit select on IO Shield
     input io_button [5],    // 5 buttons on IO Shield
-    input sigA,
-    input sigB,
-    input sigCin,
     input io_dip [3][8],     // DIP switches on IO Shield
     output pin_outOne, // Lights up according to FPGA output
     output pin_outTwo,
@@ -39,9 +36,11 @@ module mojo_top (
     reset_cond.in = ~rst_n; // input raw inverted reset signal
     rst = reset_cond.out;   // conditioned reset
    
-    pin_outOne = outputSig.q;
-    pin_outTwo = outputSig.q;
-    pin_outThree = outputSig.q;
+    // sets up the 3 pins to io_dip which is switch that is on io shield
+    // switch on will give current
+    pin_outOne = io_dip[0][0];
+    pin_outTwo = io_dip[1][0];
+    pin_outThree = io_dip[2][0];
     
     io_led[0][7:0] = 8h00; // turn off all LEDs
     io_led[1][7:0] = 8h00;
@@ -54,18 +53,19 @@ module mojo_top (
     io_seg = 8hff;          // turn segments off        
     io_sel = 4hf;           // select no digits    
    
-    io_led[0][0] = sigA;
-    io_led[0][1] = sigB;
-    io_led[0][2] = sigCin;
+    // led0 - A, led1 - B, led2 - C;
+    // sets up led0,1,2 to light up according to whether switch on io shield is flipped
+    io_led[0][0] = io_dip[0][0]; // row 1 number 1 switch = A (LED0)
+    io_led[0][1] = io_dip[1][0]; // row 2 number 1 switch = B (LED1)
+    io_led[0][2] = io_dip[2][0]; // row 3 number 1 switch = C (LED2)
    
     
     // the following 4 (or 5) lines will output correct LED light on LED5 and LED6
-    io_led[0][5] = (sigA & sigB) | (sigB & sigCin) | (sigA & sigCin);
-    abc[0] = sigA + sigB + sigCin;
+    io_led[0][5] = (io_dip[0][0] & io_dip[1][0]) | (io_dip[1][0] & io_dip[2][0]) | (io_dip[0][0] & io_dip[2][0]);
+    abc[0] = io_dip[0][0] + io_dip[1][0] + io_dip[2][0];
     // this if statement determines whether Cout led lights up or not
     if(abc[0]==1 | abc[0] == 3) {
-      io_led[0][6] = sigA | sigB | sigCin;
-    }   
-   
+      io_led[0][6] = io_dip[0][0] | io_dip[1][0] | io_dip[2][0];
+    }
   }
 }
