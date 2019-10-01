@@ -1,0 +1,71 @@
+module mojo_top (
+    input clk,              // 50MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input cclk,             // configuration clock, AVR ready when high
+    output spi_miso,        // AVR SPI MISO
+    input spi_ss,           // AVR SPI Slave Select
+    input spi_mosi,         // AVR SPI MOSI
+    input spi_sck,          // AVR SPI Clock
+    output spi_channel [4], // AVR general purpose pins (used by default to select ADC channel)
+    input avr_tx,           // AVR TX (FPGA RX)
+    output avr_rx,          // AVR RX (FPGA TX)
+    input avr_rx_busy,      // AVR RX buffer full
+    output io_led [3][8],   // LEDs on IO Shield
+    output io_seg [8],      // 7-segment LEDs on IO Shield
+    output io_sel [4],      // Digit select on IO Shield
+    input io_button [5],    // 5 buttons on IO Shield
+    input sigA,
+    input sigB,
+    input sigCin,
+    input sigSum,
+    input sigCout,
+    input io_dip [3][8],     // DIP switches on IO Shield
+    output elvis_led[4] // Lights up according to FPGA output
+  ) {
+ 
+  sig rst;                  // reset signal
+ 
+  .clk(clk) {
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond;
+    blinker myBlinker(.rst(rst)); // Creates a new blinker circuit
+  }
+ 
+  sig abc[10];
+ 
+  always {
+    reset_cond.in = ~rst_n; // input raw inverted reset signal
+    rst = reset_cond.out;   // conditioned reset
+   
+    io_led[0][7:0] = 8h00;
+    io_led[1][7:0] = 8h00;
+    io_led[2][7:0] = 8h00;
+    led = 8h00;             // turn LEDs off
+    spi_miso = bz;          // not using SPI
+    spi_channel = bzzzz;    // not using flags
+    avr_rx = bz;            // not using serial port
+   
+    io_seg = 8hff;          // turn segments off        
+    io_sel = 4hf;           // select no digits    
+   
+    io_led[0][0] = sigA;
+    io_led[0][1] = sigB;
+    io_led[0][2] = sigCin;
+    io_led[0][3] = sigSum;
+    io_led[0][4] = sigCout;
+   
+    io_led[0][5] = (sigA & sigB) | (sigB & sigCin) | (sigA & sigCin);
+   
+    abc[0] = sigA + sigB + sigCin;
+   
+    // this if statement determines whether Cout led lights up or not
+    if(abc[0]==1 | abc[0] == 3) {
+      io_led[0][6] = sigA | sigB | sigCin;
+    }
+   
+    elvis_led = myBlinker.blink; // links the led on elvis ("correct ones") to FPGA
+   
+  }
+}

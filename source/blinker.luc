@@ -1,0 +1,22 @@
+module blinker (
+    input clk,  // clock
+    input rst,  // reset
+    output blink[4]
+  ) {
+
+  dff disArray[28](.clk(clk), .rst(rst)); // dff values are 1 and 0 which is convenient cause light=1, nolight=0
+ 
+  always {
+    // Assigns array dff values to blink (leds)
+    // These are the leds that will blink correctly
+    // according to what FPGA inputs
+    // the sum and carry out values are shown on io_led[0][5] and [0][6]
+    blink[0] = disArray.q[27]; // blink[0] is pin51, which is A
+    blink[1] = disArray.q[26]; // pin41 (B)
+    blink[2] = disArray.q[25]; // pin35 (C_in)
+    blink[3] = disArray.q[24]; // add one extra one in an attemp to slow it
+    disArray.d = disArray.q + 1; // Change from 1 to 0/ 0 to 1 (i think)
+   
+   
+  }
+}
