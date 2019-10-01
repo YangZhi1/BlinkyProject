@@ -8,8 +8,6 @@
 ## Update 2 Changes (1/10/2019 21:38)
 - Removed P2 P6 P8 (Input readings for A, B and C) cause I realised that I'm taking in an input reading from an output by the same device, which I could just program in Lucid to save works on hardware.
 
-- 
-
 
 # BlinkyProject
 Want to make certain LEDs on your MOJO blink? Just clone this repo!
